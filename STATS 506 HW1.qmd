@@ -1,0 +1,385 @@
+---
+title: "STATS 506 HW1"
+format: html
+editor: visual
+embed-resources: true
+code-fold: true
+
+---
+
+#Problem 1(a)
+
+```{r}
+wine_data = read.csv("~/Desktop/wine_data.csv", header = FALSE)
+colnames(wine_data) <- c("class", "Alcohol", "Malicacid", "Ash", "Alcalinity_of_ash", 
+                         "Magnesium", "Total_phenols", "Flavanoids", "Nonflavanoid_phenols",
+                         "Proanthocyanins", "Color_intensity", "Hue", "0D280_0D315_of_diluted_wines",
+                         "Proline")
+```
+
+#Problem 1(b)
+
+```{r}
+length(which(wine_data$class==1)) == 59
+length(which(wine_data$class==2)) == 71
+length(which(wine_data$class==3)) == 48
+```
+
+#Problem 1(c)
+
+```{r}
+max(wine_data$Alcohol)
+which(wine_data$Alcohol == 14.83)
+wine_data[9,1]
+```
+
+1.  So the wine with the highest alcohol content belongs class 1.
+
+```{r}
+min(wine_data$Alcohol)
+which(wine_data$Alcohol == 11.03)
+wine_data[116,1]
+```
+
+2.  So the wine with the lowest alcohol content belongs class 2.
+
+```{r}
+length(which(wine_data$Magnesium>=114)) 
+```
+
+3.  There are 26 wines have higher levels of magnesium than 114 mg/l of magnesium.
+
+```{r}
+c1 <- wine_data$class == 1
+c2 <- wine_data$Magnesium >= 114
+nrow(wine_data[c1&c2,])
+```
+
+4.  Within class 1, there are 15 wines have higher levels of magnesium than average German beer.
+
+```{r}
+c3 <- wine_data$class == 2
+c4 <- wine_data$Magnesium >= 114
+nrow(wine_data[c3&c4,])
+```
+
+4.  Within class 2, there are 6 wines have higher levels of magnesium than average German beer.
+
+```{r}
+c5 <- wine_data$class == 3
+c6 <- wine_data$Magnesium >= 114
+nrow(wine_data[c5&c6,])
+```
+
+4.  Within class 3, there are 5 wines have higher levels of magnesium than average German beer.
+
+#Problem 1(d)
+
+```{r}
+table <- data.frame(
+  Alcohol = c(mean(wine_data$Alcohol), mean(wine_data$Alcohol[1:59]), 
+              mean(wine_data$Alcohol[60:130]), mean(wine_data$Alcohol[131:178])),
+  Malicacid = c(mean(wine_data$Malicacid), mean(wine_data$Malicacid[1:59]),
+                mean(wine_data$Malicacid[60:130]), mean(wine_data$Malicacid[131:178])),
+  Ash = c(mean(wine_data$Ash), mean(wine_data$Ash[1:59]), 
+          mean(wine_data$Ash[60:130]), mean(wine_data$Ash[131:178])),
+  Alcalinity_of_ash = c(mean(wine_data$Alcalinity_of_ash), mean(wine_data$Alcalinity_of_ash[1:59]),
+                        mean(wine_data$Alcalinity_of_ash[60:130]),
+                        mean(wine_data$Alcalinity_of_ash[131:178])),
+  Magnesium = c(mean(wine_data$Magnesium), mean(wine_data$Magnesium[1:59]),
+                mean(wine_data$Magnesium[60:130]), mean(wine_data$Magnesium[131:178])),
+  Total_phenols = c(mean(wine_data$Total_phenols), mean(wine_data$Total_phenols[1:59]),
+                    mean(wine_data$Total_phenols[60:130]), mean(wine_data$Total_phenols[131:178])),
+  Flavanoids = c(mean(wine_data$Flavanoids), mean(wine_data$Flavanoids[1:59]),
+                 mean(wine_data$Flavanoids[60:130]), mean(wine_data$Flavanoids[131:178])),
+  Nonflavanoid_phenols = c(mean(wine_data$Nonflavanoid_phenols),
+                           mean(wine_data$Nonflavanoid_phenols[1:59]),
+                           mean(wine_data$Nonflavanoid_phenols[60:130]),
+                           mean(wine_data$Nonflavanoid_phenols[131:178])),
+  Proanthocyanins = c(mean(wine_data$Proanthocyanins), mean(wine_data$Proanthocyanins[1:59]),
+                      mean(wine_data$Proanthocyanins[60:130]),
+                      mean(wine_data$Proanthocyanins[131:178])),
+  Color_intensity = c(mean(wine_data$Color_intensity), mean(wine_data$Color_intensity[1:59]),
+                      mean(wine_data$Color_intensity[60:130]), 
+                      mean(wine_data$Color_intensity[131:178])),
+  Hue = c(mean(wine_data$Hue), mean(wine_data$Hue[1:59]), mean(wine_data$Hue[60:130]),
+          mean(wine_data$Hue[131:178])),
+  diluted_wines = c(mean(wine_data$`0D280_0D315_of_diluted_wines`),
+                    mean(wine_data$`0D280_0D315_of_diluted_wines`[1:59]),
+                    mean(wine_data$`0D280_0D315_of_diluted_wines`[60:130]),
+                    mean(wine_data$`0D280_0D315_of_diluted_wines`[131:178])),
+  Proline = c(mean(wine_data$Proline), mean(wine_data$Proline[1:59]), 
+              mean(wine_data$Proline[60:130]), mean(wine_data$Proline[131:178])))
+rownames(table) <- c("Average","Class1 Average","Class2 Average","Class3 Average")
+print(table)
+```
+
+#Problem 1(e)
+
+```{R}
+class1_mean = wine_data$Ash[1:59]
+class2_mean = wine_data$Ash[60:130]
+class3_mean = wine_data$Ash[131:178]
+```
+
+```{r}
+t.test(class1_mean, class2_mean, alternative = "two.sided", var.equal = FALSE, conf.level = 0.95)
+```
+
+The p-value is 2.124e-05 which is lower than 0.05 so we reject the null hypothesis which means there's a difference in the means of level of Ash between class 1 and 2.
+
+```{r}
+t.test(class2_mean, class3_mean, alternative = "two.sided", var.equal = FALSE, conf.level = 0.95)
+```
+
+The p-value is 5.627e-05 which is lower than 0.05 so we reject the null hypothesis which means there's a difference in the means of level of Ash between class 2 and 3.
+
+```{r}
+t.test(class1_mean, class3_mean, alternative = "two.sided", var.equal = FALSE, conf.level = 0.95)
+```
+
+The p-value is 0.643 which is greater than 0.05 so we fail to reject the null hypothesis which means there's no difference in the means of level of Ash between class 1 and 3.
+
+#Problem 2(a)
+
+```{r}
+isPerfectPower <- function(n, p){
+  x = (all.equal(n^(1/p)%%1,0)==TRUE)|(all.equal(n^(1/p)%%1,1)==TRUE)
+  y = n^(1/p)
+  result_a = list(x,y)
+  return(result_a)
+}
+
+isPerfectPower(125, 3)
+
+```
+
+#Problem 2(b)
+
+```{r}
+findRootPower <- function(n){
+  for (p in 2:10) {
+    if(isPerfectPower(n,p)[[1]]==TRUE){
+          result_b = isPerfectPower(n,p)
+          print(paste(n,"=",result_b[[2]],"^",p))
+          return(invisible(p))
+          }
+        }
+      return("Not a perfect power")
+}
+
+```
+
+```{r}
+findRootPower(27)
+findRootPower(13060694016)
+findRootPower(7776)
+findRootPower(170859375)
+findRootPower(58247422)
+findRootPower(94143178827)
+```
+
+#Problem 3(a)
+
+```{r}
+##ChatGPT Solution
+# Function to determine the name of a 5-card poker hand
+get_poker_hand_name <- function(suits, ranks) {
+  unique_ranks <- unique(ranks)
+  
+  # Check for flush
+  if(length(unique(suits)) == 1) {
+    # Check for straight flush
+    if(length(unique_ranks) == 5 && max(unique_ranks) - min(unique_ranks) == 4) {
+      return("Straight Flush")
+    }
+    return("Flush")
+  }
+  
+  # Check for straight
+  if(length(unique_ranks) == 5 && max(unique_ranks) - min(unique_ranks) == 4) {
+    return("Straight")
+  }
+  
+  # Check for four of a kind
+  if(any(table(ranks) == 4)) {
+    return("Four of a Kind")
+  }
+  
+  # Check for full house
+  if(any(table(ranks) == 3) && any(table(ranks) == 2)) {
+    return("Full House")
+  }
+  
+  # Check for three of a kind
+  if(any(table(ranks) == 3)) {
+    return("Three of a Kind")
+  }
+  
+  # Check for two pair
+  if(sum(table(ranks) == 2) == 4) {
+    return("Two Pair")
+  }
+  
+  # Check for one pair
+  if(sum(table(ranks) == 2) == 2) {
+    return("One Pair")
+  }
+  
+  return("High Card")
+}
+
+# Function to simulate dealing a round of cards in 5-card stud poker
+deal_poker_round <- function(num_players) {
+  # Define the suits and ranks
+  suits <- c("Hearts", "Diamonds", "Clubs", "Spades")
+  ranks <- c("2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King", "Ace")
+  
+  # Create a deck of cards
+  deck <- expand.grid(rank = ranks, suit = suits)
+  
+  # Shuffle the deck
+  deck <- deck[sample(nrow(deck)), ]
+  
+  # Deal cards to each player
+  player_hands <- split(deck, factor(rep(1:num_players, each = 5)))
+  
+  # Display hands and their names
+  for (i in 1:num_players) {
+    hand <- player_hands[[i]]
+    cat(paste("Player", i, "hand:\n"))
+    print(hand)
+    hand_name <- get_poker_hand_name(hand$suit, hand$rank)
+    cat("Hand Name:", hand_name, "\n\n")
+  }
+}
+
+# Example usage:
+deal_poker_round(4) # Simulates dealing for 4 players
+
+```
+
+#Problem 3(b) It looks like the code runs without any modification.
+
+```{r}
+suits_1 <- c("Club", "Hearts", "Club", "Hearts", "Diamonds") 
+ranks_1 <- c(2,3,4,5,6)
+get_poker_hand_name(suits_1, ranks_1)
+deal_poker_round(4)
+```
+
+#Problem 3(c)
+
+```{r}
+# Function to determine the name of a 5-card poker hand
+get_poker_hand_name <- function(suits, ranks) {
+  # start of a function called get_poker_hand_name with two inputs suits and ranks
+  has_consecutive_ranks <- function(ranks) {
+  #another function called has_consecutive_ranks using the same inputs ranks as above
+    sorted_ranks <- sort(unique(as.numeric(factor(ranks, levels = c("2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King", "Ace")))))
+#sort the vector input into numeric vectors and returns the unique element in the vector so that one element is only considered once and afterall rearranging in ascending order
+    return(max(sorted_ranks) - min(sorted_ranks) == 4 && length(sorted_ranks) == 5)
+#return when both conditions: 1. max ranks - min ranks =4 and the length of ranks is 5 which means the hands are either flush or straight flush.
+  }
+  
+  # Helper function to check for same suits
+  has_same_suits <- function(suits) {
+  # new function called has_same_suits that has on vector input suits
+    return(length(unique(suits)) == 1)
+  #return when the length of a unique input vector is 1 which means when the hand is the same suits
+  }
+  
+  # Check for various hand combinations
+  if(has_consecutive_ranks(ranks) && has_same_suits(suits)) {
+    # under the condition where the ranks are consecutive and same suits using previous functions
+    return("Straight Flush")
+    #then the hand is a straight flush
+  } else if(any(table(ranks) == 4)) {
+    #if any ranks that occur exactly four times
+    return("Four of a Kind")
+    #then the hand is a four of kind
+  } else if(all(table(ranks) == c(3,2))) {
+    #if the the table column ranks appear to be 3,2 which means 3 of one type and two of another type
+    return("Full House")
+    #then the hand is a full house
+  } else if(has_same_suits(suits)) {
+    #if all the suits are the same using function written above
+    return("Flush")
+    #then the hand is a flush
+  } else if(has_consecutive_ranks(ranks)) {
+    #check if the ranks are consecutive using function written above
+    return("Straight")
+    #return straight if the logic is true
+  } else if(any(table(ranks) == 3)) {
+    #if the there  3 times it appears to be the same
+    return("Three of a Kind")
+    #then the hand is a three of kind
+  } else if(sum(table(ranks) == 2) == 4) {
+    #under the condition that four cards have appeared exactly twice which means they are two pair 
+    return("Two Pair")
+    #return when the above condition is true
+  } else if(sum(table(ranks) == 2) == 2) {
+     #under the condition that two ranks have appeared exactly twice which means they are two pair 
+    return("One Pair")
+      #return when the above condition is true
+  } else {
+    return("High Card")
+    #if none of the above are true, then it must be high card so here it returns high card.
+  }
+}
+
+# Function to simulate dealing a round of cards in 5-card stud poker
+deal_poker_round <- function(num_players) {
+  #a new function called deal_poker_round that has one input num_players
+  suits <- c("Hearts", "Diamonds", "Clubs", "Spades")
+  ranks <- c("2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King", "Ace")
+  #defining the suits and ranks 
+  deck <- expand.grid(rank = ranks, suit = suits)
+  #create a deck of cards called deck using the given ranks and suits combined
+  
+  deck <- deck[sample(nrow(deck)), ]
+  #it rearrange the order of the number in deck
+
+    player_hands <- split(deck, factor(rep(1:num_players, each = 5)))
+  #it uses the split function to split the cards to each player and each have 5 based on given
+  
+  # Display hands and their names
+  for (i in 1:num_players) {
+    #using a for loop to go through each player which is from 1 to the number of player there will be
+    hand <- player_hands[[i]]
+    #assign the hands of ith player to a variable name hand
+    cat(paste("Player", i, "hand:\n"))
+    #print out the number of player(i) and the hand 
+    print(hand)
+    #print out the hand 
+    hand_name <- get_poker_hand_name(hand$suit, hand$rank)
+    #using the function get_poker_hand_name written above with the suit and rank number is the hand as inputs to get the hand name and store it to the variable called hand_name
+    cat("Hand Name:", hand_name, "\n\n")
+    #print out the message Hand Name: with the actual hand name from the above line
+  }
+}
+```
+
+#Problem3(d) First, I think the two inputs for the first function get_poker_hand_name and by typing some examples, I did get the result I expected.
+
+```{r}
+set.seed(123)
+
+suits <- c("Diamonds", "Heart", "Diamonds","Diamonds","Heart")
+ranks<-c("2","3","4","5","6")
+get_poker_hand_name(suits,ranks)
+
+suits <- c("Diamonds", "Heart", "Diamonds","Diamonds","Heart")
+ranks<-c("2","2","7","7","Queen")
+get_poker_hand_name(suits,ranks)
+```
+
+But when I am testing out for 5 cards for a two pair it actually tells me one pair with the warning: longer object length is not a multiple of shorter object length. The reason why I think this does not work is because the if statement else if(sum(table(ranks) == 2) == 4) shows the sum has to equal to 4 so if I am testing out for 5 cards it won't work. My attempt to fix this problem is probably remove the sum == 4. Something like: else if((table(ranks)==2)&&sum(table(ranks)\>=4).
+
+```{r}
+deal_poker_round(5)
+deal_poker_round(15)
+
+```
+
+For the second function, it looks like the input is correct as well as the name of hands. But it looks like they are not doing hands which means a set of 5 playing cards. Instead, the function is spiting the cards based on the number of players through input until it can't be divided anymore.It doesn't looks like there's any duplicate for the card. I want to fix this by adding a for loop: for (j in 52), and then break it once it has reach a length of 5. Like an increment of 5 until the card has done for divided for number of players. For the issue of asking for more than 10 hands to be dealt, it looks like the function is giving me blank hands at the end. I think I want to fix this issue by adding a if statement saying that if the number of players times the number of hands is greater than 52 then returns 'error'.
