@@ -1,0 +1,625 @@
+---
+title: "STATS 506 HW3"
+format: html
+editor: visual
+embed-resources: true
+code-fold: true
+---
+
+Github Link: 
+
+
+#### Problem 1(a)
+
+``` stata
+
+ import sasxport5 "K:\STATA 506\VIX_D.XPT", clear
+ save "K:\STATA 506\VIX_D.dta"
+ import sasxport5 "K:\STATA 506\DEMO_D.XPT", clear
+ save "K:\STATA 506\DEMO_D.dta"
+ merge 1:1 seqn using "K:\STATA 506\VIX_D.dta", keep(match)
+ count
+ 
+```
+
+to produce:
+
+``` stata
+
+. 
+end of do-file
+
+. do "C:\Users\LOCAL_~2\Temp\STD2350_000000.tmp"
+
+.  import sasxport5 "K:\STATA 506\DEMO_D.XPT", clear
+
+. 
+end of do-file
+
+. do "C:\Users\LOCAL_~2\Temp\STD2350_000000.tmp"
+
+.  save "K:\STATA 506\DEMO_D.dta"
+file K:\STATA 506\DEMO_D.dta saved
+
+. 
+
+  do "C:\Users\LOCAL_~2\Temp\STD40c4_000000.tmp"
+
+.  merge 1:1 seqn using "K:\STATA 506\VIX_D.dta", keep(match)
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                             6,980  (_merge==3)
+    -----------------------------------------
+
+. count
+  6,980
+
+
+. 
+end of do-file
+
+. 
+```
+
+## citation:
+
+"https://www.stata.com/manuals/dmerge.pdf"
+
+
+#### Problem 1(b)
+
+```stata
+
+ recode ridageyr (0/9=0) (10/19=10) (20/29=20) (30/39=30) (40/49=40) (50/59=50) (60/69=60) (70/79=70) (80/89=80) (90/99=90) (100/109=100), generate(ageScale)
+ 
+ tabulate ageScale viq220, row
+
+```
+
+to produce
+
+```stata 
+
+.  recode ridageyr (0/9=0) (10/19=10) (20/29=20) (30/39=30) (40/49=40) (50/59=50
+> ) (60/69=60) (70/79=70) (80/89=80) (90/99=90) (100/109=100), generate(ageScale
+> )
+(1,301 differences between ridageyr and ageScale)
+
+. do "C:\Users\LOCAL_~1\Temp\STD2eec_000000.tmp"
+
+.  tabulate ageScale viq220, row
+
++----------------+
+| Key            |
+|----------------|
+|   frequency    |
+| row percentage |
++----------------+
+
+ RECODE of |
+  ridageyr |
+   (Age at |
+ Screening |
+Adjudicate | Glasses/contact lenses worn for
+       d - |             distance
+   Recode) |         1          2          9 |     Total
+-----------+---------------------------------+----------
+        10 |       670      1,418          0 |     2,088 
+           |     32.09      67.91       0.00 |    100.00 
+-----------+---------------------------------+----------
+        20 |       306        631          2 |       939 
+           |     32.59      67.20       0.21 |    100.00 
+-----------+---------------------------------+----------
+        30 |       269        481          0 |       750 
+           |     35.87      64.13       0.00 |    100.00 
+-----------+---------------------------------+----------
+        40 |       286        487          0 |       773 
+           |     37.00      63.00       0.00 |    100.00 
+-----------+---------------------------------+----------
+        50 |       335        274          0 |       609 
+           |     55.01      44.99       0.00 |    100.00 
+-----------+---------------------------------+----------
+        60 |       392        238          0 |       630 
+           |     62.22      37.78       0.00 |    100.00 
+-----------+---------------------------------+----------
+        70 |       299        148          0 |       447 
+           |     66.89      33.11       0.00 |    100.00 
+-----------+---------------------------------+----------
+        80 |       208        103          0 |       311 
+           |     66.88      33.12       0.00 |    100.00 
+-----------+---------------------------------+----------
+     Total |     2,765      3,780          2 |     6,547 
+           |     42.23      57.74       0.03 |    100.00 
+
+. 
+end of do-file
+
+. 
+```
+
+## citation :
+
+"https://www.stata.com/manuals/drecode.pdf"
+"https://www.stata.com/manuals/rtabulateoneway.pdf"
+
+
+
+#### Problem 1(c)
+## 1
+```stata
+
+ replace viq220 = viq220 - 1
+ regress viq220 c.ridageyr
+ estat ic
+ logit viq220 c.ridageyr, or
+ estimates store m1, title(Model 1)
+
+```
+
+to produce
+
+```stata
+
+. do "C:\Users\LOCAL_~1\Temp\STDc3c_000000.tmp"
+
+.  replace viq220 = viq220 - 1
+(6,547 real changes made)
+
+. 
+end of do-file
+
+. do "C:\Users\LOCAL_~1\Temp\STDc3c_000000.tmp"
+
+.  regress viq220 c.ridageyr
+
+      Source |       SS           df       MS      Number of obs   =     6,547
+-------------+----------------------------------   F(1, 6545)      =    446.28
+       Model |  108.967394         1  108.967394   Prob > F        =    0.0000
+    Residual |  1598.08316     6,545  .244168551   R-squared       =    0.0638
+-------------+----------------------------------   Adj R-squared   =    0.0637
+       Total |  1707.05056     6,546  .260777659   Root MSE        =    .49413
+
+------------------------------------------------------------------------------
+      viq220 | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+    ridageyr |   -.005917   .0002801   -21.13   0.000    -.0064661   -.0053679
+       _cons |   .8035266   .0122248    65.73   0.000     .7795621    .8274911
+------------------------------------------------------------------------------
+
+. 
+end of do-file
+
+. do "C:\Users\LOCAL_~1\Temp\STDc3c_000000.tmp"
+
+.  estat ic
+
+Akaike's information criterion and Bayesian information criterion
+
+-----------------------------------------------------------------------------
+       Model |          N   ll(null)  ll(model)      df        AIC        BIC
+-------------+---------------------------------------------------------------
+           . |      6,547  -4889.421  -4673.494       2   9350.988   9364.562
+-----------------------------------------------------------------------------
+Note: BIC uses N = number of observations. See [R] IC note.
+
+. 
+end of do-file
+
+. do "C:\Users\LOCAL_~1\Temp\STDc3c_000000.tmp"
+
+.  logit viq220 c.ridageyr, or
+
+Iteration 0:  Log likelihood = -4458.7243  
+Iteration 1:  Log likelihood = -4237.1322  
+Iteration 2:  Log likelihood = -4236.8396  
+Iteration 3:  Log likelihood = -4236.8396  
+
+Logistic regression                                     Number of obs =  6,547
+                                                        LR chi2(1)    = 443.77
+                                                        Prob > chi2   = 0.0000
+Log likelihood = -4236.8396                             Pseudo R2     = 0.0498
+
+------------------------------------------------------------------------------
+      viq220 | Odds ratio   Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+    ridageyr |    .975618   .0011762   -20.48   0.000     .9733154    .9779259
+       _cons |   3.532101   .1887809    23.61   0.000     3.180818     3.92218
+------------------------------------------------------------------------------
+Note: _cons estimates baseline odds.
+
+. 
+end of do-file
+
+. 
+
+```
+
+## 2
+```stata
+
+ regress viq220 c.ridageyr i.ridreth1 i.riagendr
+ estat ic
+ logit viq220 c.ridageyr i.ridreth1 i.riagendr, or
+ estimates store m2, title(Model 2)
+
+```
+
+to produce
+
+```stata
+
+ . do "C:\Users\LOCAL_~1\Temp\STDc3c_000000.tmp"
+
+.  regress viq220 c.ridageyr i.ridreth1 i.riagendr
+
+      Source |       SS           df       MS      Number of obs   =     6,547
+-------------+----------------------------------   F(6, 6540)      =    106.57
+       Model |  152.040298         6  25.3400497   Prob > F        =    0.0000
+    Residual |  1555.01026     6,540  .237769153   R-squared       =    0.0891
+-------------+----------------------------------   Adj R-squared   =    0.0882
+       Total |  1707.05056     6,546  .260777659   Root MSE        =    .48762
+
+------------------------------------------------------------------------------
+      viq220 | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+    ridageyr |    -.00526   .0002879   -18.27   0.000    -.0058244   -.0046955
+             |
+    ridreth1 |
+          2  |  -.0352318    .037023    -0.95   0.341    -.1078089    .0373453
+          3  |  -.1501615   .0158726    -9.46   0.000    -.1812769   -.1190461
+          4  |  -.0594469   .0170746    -3.48   0.001    -.0929187   -.0259752
+          5  |  -.1487024   .0316435    -4.70   0.000    -.2107341   -.0866707
+             |
+  2.riagendr |  -.1067196   .0120702    -8.84   0.000    -.1303812    -.083058
+       _cons |   .9202886   .0165296    55.68   0.000     .8878851    .9526921
+------------------------------------------------------------------------------
+
+.  estat ic
+
+Akaike's information criterion and Bayesian information criterion
+
+-----------------------------------------------------------------------------
+       Model |          N   ll(null)  ll(model)      df        AIC        BIC
+-------------+---------------------------------------------------------------
+           . |      6,547  -4889.421  -4584.053       7   9182.106   9229.614
+-----------------------------------------------------------------------------
+Note: BIC uses N = number of observations. See [R] IC note.
+
+.  logit viq220 c.ridageyr i.ridreth1 i.riagendr, or
+
+Iteration 0:  Log likelihood = -4458.7243  
+Iteration 1:  Log likelihood = -4139.4727  
+Iteration 2:  Log likelihood = -4137.9626  
+Iteration 3:  Log likelihood = -4137.9624  
+
+Logistic regression                                     Number of obs =  6,547
+                                                        LR chi2(6)    = 641.52
+                                                        Prob > chi2   = 0.0000
+Log likelihood = -4137.9624                             Pseudo R2     = 0.0719
+
+------------------------------------------------------------------------------
+      viq220 | Odds ratio   Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+    ridageyr |   .9776661   .0012342   -17.89   0.000     .9752501     .980088
+             |
+    ridreth1 |
+          2  |    .854417   .1403638    -0.96   0.338     .6192048    1.178977
+          3  |   .5122235    .035861    -9.56   0.000     .4465463    .5875603
+          4  |   .7688672   .0588752    -3.43   0.001     .6617158    .8933696
+          5  |   .5209638   .0705399    -4.82   0.000      .399533    .6793014
+             |
+  2.riagendr |   .6058933   .0321156    -9.45   0.000     .5461072    .6722246
+       _cons |   6.281091   .4894375    23.58   0.000     5.391473      7.3175
+------------------------------------------------------------------------------
+Note: _cons estimates baseline odds.
+
+. 
+end of do-file
+
+. 
+
+
+```
+
+## 3
+```stata
+
+ regress viq220 c.ridageyr i.ridreth1 i.riagendr c.indfmpir
+ estat ic
+ logit viq220 c.ridageyr i.ridreth1 i.riagendr c.indfmpir, or
+ estimates store m3, title(Model 3)
+
+ 
+ ```
+ 
+ to produce
+ 
+ ```stata
+ 
+.  regress viq220 c.ridageyr i.ridreth1 i.riagendr c.indfmpir
+
+      Source |       SS           df       MS      Number of obs   =     6,249
+-------------+----------------------------------   F(7, 6241)      =     88.27
+       Model |  147.460482         7  21.0657832   Prob > F        =    0.0000
+    Residual |  1489.37997     6,241  .238644444   R-squared       =    0.0901
+-------------+----------------------------------   Adj R-squared   =    0.0891
+       Total |  1636.84045     6,248  .261978306   Root MSE        =    .48851
+
+------------------------------------------------------------------------------
+      viq220 | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+    ridageyr |   -.005169   .0002967   -17.42   0.000    -.0057505   -.0045875
+             |
+    ridreth1 |
+          2  |  -.0275455   .0379827    -0.73   0.468    -.1020048    .0469137
+          3  |  -.1140486   .0171294    -6.66   0.000    -.1476281   -.0804691
+          4  |  -.0488356   .0176895    -2.76   0.006    -.0835132    -.014158
+          5  |  -.1234639   .0327039    -3.78   0.000    -.1875748    -.059353
+             |
+  2.riagendr |  -.1096468   .0123808    -8.86   0.000    -.1339175   -.0853761
+    indfmpir |   -.024683   .0040946    -6.03   0.000    -.0327098   -.0166562
+       _cons |   .9588157   .0186702    51.36   0.000     .9222156    .9954157
+------------------------------------------------------------------------------
+
+.  estat ic
+
+Akaike's information criterion and Bayesian information criterion
+
+-----------------------------------------------------------------------------
+       Model |          N   ll(null)  ll(model)      df        AIC        BIC
+-------------+---------------------------------------------------------------
+           . |      6,249  -4681.199  -4386.222       8   8788.443   8842.365
+-----------------------------------------------------------------------------
+Note: BIC uses N = number of observations. See [R] IC note.
+
+.  logit viq220 c.ridageyr i.ridreth1 i.riagendr c.indfmpir, or
+
+Iteration 0:  Log likelihood = -4260.6598  
+Iteration 1:  Log likelihood = -3949.4647  
+Iteration 2:  Log likelihood = -3948.0389  
+Iteration 3:  Log likelihood = -3948.0387  
+
+Logistic regression                                     Number of obs =  6,249
+                                                        LR chi2(7)    = 625.24
+                                                        Prob > chi2   = 0.0000
+Log likelihood = -3948.0387                             Pseudo R2     = 0.0734
+
+------------------------------------------------------------------------------
+      viq220 | Odds ratio   Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+    ridageyr |   .9780431   .0012665   -17.15   0.000      .975564    .9805284
+             |
+    ridreth1 |
+          2  |   .8891554   .1496069    -0.70   0.485     .6393767    1.236513
+          3  |   .6051742   .0454583    -6.69   0.000     .5223259    .7011634
+          4  |   .8115435   .0642782    -2.64   0.008     .6948522    .9478315
+          5  |   .5860531   .0821287    -3.81   0.000     .4452979    .7712998
+             |
+  2.riagendr |   .5974353   .0324396    -9.49   0.000     .5371212    .6645221
+    indfmpir |   .8927698   .0158011    -6.41   0.000     .8623312    .9242828
+       _cons |   7.516118   .6598894    22.97   0.000     6.327921    8.927424
+------------------------------------------------------------------------------
+Note: _cons estimates baseline odds.
+
+. 
+end of do-file
+
+. 
+
+```
+
+```stata
+
+ estout m1 m2 m3, stats(aic N r2_p) eform
+ 
+```
+
+to produce
+
+```stata
+
+.  estout m1 m2 m3, stats(aic N r2_p) eform
+
+---------------------------------------------------
+                       m1           m2           m3
+                        b            b            b
+---------------------------------------------------
+viq220                                             
+ridageyr          .975618     .9776661     .9780431
+1.ridreth1                           1            1
+2.ridreth1                     .854417     .8891554
+3.ridreth1                    .5122235     .6051742
+4.ridreth1                    .7688672     .8115435
+5.ridreth1                    .5209638     .5860531
+1.riagendr                           1            1
+2.riagendr                    .6058933     .5974353
+indfmpir                                   .8927698
+_cons            3.532101     6.281091     7.516118
+---------------------------------------------------
+aic              8477.679     8289.925     7912.077
+N                    6547         6547         6249
+r2_p             .0497642     .0719403     .0733739
+---------------------------------------------------
+
+. 
+end of do-file
+
+. 
+
+```
+
+## citation:
+
+"https://www.stata.com/support/faqs/statistics/outcome-does-not-vary/"
+"http://repec.org/bocode/e/estout/hlp_estout.html#cells"
+"https://stats.oarc.ucla.edu/stata/faq/how-can-i-use-estout-to-make-regression-tables-that-look-like-those-in-journal-articles/"
+
+
+#### Problem 1(d)
+
+Based on the result from last part, we can see a p-value of 0.00 in the chart. So we reject the null hypothesis since p<0.05. Thus, the odds of men and women being wears of glasses/contact lenses for distance vision differs. Based on the Logistic regression model, we see that the p-value for gender is 0 which is less than 0.05 so we reject the null hypothesis for it and therefor the proportion of wearers of glasses/contact lenses for distance vision differs between men and women. 
+
+
+#### Problem 2(a)
+```{r}
+library(DBI)
+library(RSQLite)
+
+sakila <- dbConnect(RSQLite::SQLite(), "~/Desktop/sakila_master.db")
+dbListTables(sakila)
+```
+
+
+```{r}
+
+dbGetQuery(sakila, "
+Select Count(*), language_id
+from film
+GROUP BY language_id
+")
+
+##used original language_id to make sure it is correct
+dbGetQuery(sakila, "
+Select Count(*), original_language_id
+from film
+GROUP BY original_language_id
+")
+```
+
+Based on the result, it seems like English is the most common used language for the films. (I double check with the original one and it seems like English is the only one)
+
+
+
+#### Problem 2(b)
+## way 1 (SQL)
+```{r}
+dbGetQuery(sakila, "
+SELECT c.category_id AS CID, c.name AS NAME, COUNT(f.category_id) AS num_cat
+  FROM category AS c
+       INNER JOIN film_category AS f ON c.category_id = f.category_id
+ GROUP BY c.category_id
+ ORDER BY -num_cat
+")
+```
+
+Based on the result, it looks like sports movie is the most common in the data and there are 74 movies about sports.
+
+
+## way 2 (R)
+```{r}
+df1_names <- dbGetQuery(sakila, "SELECT category_id, name FROM category")
+df2 <- dbGetQuery(sakila, "SELECT category_id, film_id FROM film_category")
+genre_num <- tail(names(sort(table(df2$category_id))), 1)
+genre_num
+num_of_ocu <- length(which(df2$category_id == 15))
+num_of_ocu
+```
+
+
+Based on the result, it looks like sports movie is the most common in the data and there are 74 movies about sports.
+
+
+#### Problem 2(c)
+## way 1 (SQL)
+```{r}
+dbGetQuery(sakila, "
+SELECT a.country_id AS COUNTRYID, a.country AS NAME, COUNT(b.country) AS num_count
+  FROM country AS a
+       INNER JOIN customer_list AS b ON a.country = b.country
+ GROUP BY a.country
+ HAVING num_count == 9
+ ORDER BY -num_count
+")
+```
+
+Based on the result, only the United Kingdom has 9 customers.
+
+
+## way 2 (R)
+```{r}
+df4 <- dbGetQuery(sakila, "SELECT country FROM customer_list")
+which(table(df4$country)==9)
+```
+
+Based on the result, only the United Kingdom has 9 customers.
+
+
+#### Problem 3(a)
+
+```{r}
+us_500 <- read.csv("~/Desktop/us-500.csv")
+num_tld <- length(grep(".net", us_500$email))
+num_emails <- length(us_500$email)
+proportion <- num_tld/num_emails
+proportion
+```
+
+The proportion of email addresses are hosted at a domain with TLD “.net" is 14.6% based on the result.
+
+
+
+#### Problem 3(b)
+```{r}
+num_na <- length(grep("[^a-zA-Z\\d\\s:\\@\\.]+", us_500$email))
+proportion2 <- num_na/num_emails
+proportion2
+```
+
+Based on the result, 24.8% of email addresses have at least one non alphanumeric character in
+them.
+
+
+#### Problem 3(c)
+```{r}
+phones_col <- rbind(us_500$phone1,us_500$phone2)
+phones_count <- substr(phones_col, 0, 3)
+table <- table(phones_count)
+names(table)[which.max(table)]
+```
+
+The most used area code is 973.
+
+
+
+
+#### Problem 3(d)
+```{r}
+df_a <- data.frame(gsub(".*\\D", "", us_500$address))
+## The following step is to remove all the empty "" from the data frame above
+clean_data <- df_a[!(is.na(df_a) | df_a==""), ]
+## Taking the log value of cleaned data and make them numeric
+nume_data <- log(as.data.frame(sapply(clean_data, as.numeric)))
+hist(nume_data$`sapply(clean_data, as.numeric)`, main  = "Histogram", xlab = "log(Apartment Number)")
+```
+
+
+
+#### Problem 3(e)
+```{r}
+first_let <- substr(clean_data, 0, 1)
+table(first_let)
+max(names(table(first_let)))
+```
+
+
+Based on the result, it seems like 9 appears as the leading significant digit and then 1. From 2-8, it doesn't look like it's in a decreasing order. Therefore, the apartment numbers does not appear to follow Benford’s law and the apartment numbers would not pass as real data.
+
+
+
+#### Problem 3(f)
+```{r}
+street_num <- sub("\\D+.*", "", us_500$address)
+last_digit <- substr(street_num, nchar(street_num), nchar(street_num))
+table(last_digit)
+max(names(table(last_digit)))
+```
+
+
+Based on the result, it seems like 9 is again the most significant digit and on the other side 1 is the lowest(we are not counting 0 since we are looking at the first significant digit). Therefore, the last digit of street numbers does not appear to follow Benford’s law and the street numbers would not pass as real data.
+
+
+
+
+
