@@ -1,0 +1,610 @@
+---
+title: "STATS 506 HW4"
+format: html
+editor: visual
+embed-resources: true
+code-fold: true
+---
+
+Github Link: https://github.com/shuoqin12/HW/blob/main/STATS%20506%20HW4.html
+
+#### Problem 1 Tidyverse (a)
+
+```{r}
+library(tidyverse)
+library(nycflights13)
+```
+
+
+
+```{r}
+## NEED TO CHANGE THE AIRPORT NAME
+dep_delay_table <- flights %>%
+  
+  group_by(origin) %>%
+  summarise(mean_dep_count = mean(dep_delay, na.rm = TRUE),
+            median_dep_count = median(dep_delay, na.rm = TRUE),
+             num_flights = n()) %>%
+  filter(num_flights >= 10) %>%
+  arrange(desc(mean_dep_count)) %>%
+  left_join(airports, by = c("origin" = "faa")) %>%
+  select(name,
+         mean_dep_count,
+         median_dep_count)
+
+dep_delay_table %>% print(n=Inf)
+
+```
+
+
+
+
+```{r}
+arr_delay_table <- flights %>%
+  group_by(dest) %>%
+  summarise(mean_arr_count = mean(arr_delay, na.rm = TRUE),
+            median_arr_count = median(arr_delay, na.rm = TRUE),
+            num_flights = n()) %>%
+  filter(num_flights >= 10) %>%
+  arrange(desc(mean_arr_count)) %>%
+  left_join(airports, by = c("dest" = "faa")) %>%
+  select(name,
+         mean_arr_count,
+         median_arr_count)
+
+  
+arr_delay_table %>% print(n=Inf)
+```
+
+
+
+
+#### Problem 1 Tidyverse (b)
+```{r}
+flight_speed <- flights %>%
+  group_by(tailnum) %>%
+  summarise(fastest_avg_speed = sum(distance) / sum(air_time/60),
+             num_flights = n()) %>%
+  slice_max(fastest_avg_speed) %>%
+  left_join(planes, by = c("tailnum" = "tailnum")) %>%
+  select(model,
+         fastest_avg_speed,
+         num_flights)
+  
+flight_speed
+```
+
+
+
+
+
+#### Problem 2 get_temp (a)
+```{r}
+library(roxygen2)
+library(magrittr)
+```
+
+
+```{r}
+nnmaps <- read.csv("~/Desktop/chicago-nmmaps.csv")
+```
+
+
+```{r}
+#' A function that allows a user to request the average temperature for a given month
+#'
+#' @param month 
+#' @param year 
+#' @param data 
+#' @param celsius 
+#' @param average_fn 
+#'
+#' @return
+#' numeric vector of length 1 with the answer of average temperature
+#' @export
+#'
+get_temp <- function(month_input, year_input, data, celsius = FALSE, average_fn = mean){
+  if (class(month_input) == "character"){
+    data <- data %>% 
+      select(month, year, temp)
+    }
+  
+  else if (class(month_input) == "numeric"){
+    data <- data %>% 
+      select(month_numeric, year, temp) %>%
+      rename(month = month_numeric)
+  }
+  
+  average_temp <- data %>% 
+    filter(year_input == year, month_input == month) %>%
+    pull(temp) %>%
+    average_fn
+  
+  if(celsius == FALSE){
+    average_temp <- average_temp %>% -32 %>% multiply_by(5/9)
+  }
+  
+  if(average_temp == "NaN") {
+    cat("There has been an error, please check the input again.")
+  }
+
+  return(average_temp)
+}
+```
+
+```{r}
+get_temp("Apr", 1999, data = nnmaps)
+```
+
+```{r}
+get_temp("Apr", 1999, data = nnmaps, celsius = TRUE)
+```
+
+```{r}
+get_temp(10, 1998, data = nnmaps, average_fn = median)
+```
+
+```{r}
+get_temp(13, 1998, data = nnmaps)
+```
+
+```{r}
+get_temp(2, 2005, data = nnmaps)
+```
+
+
+
+
+
+#### Problem 3 SAS
+#### (a)
+```SAS
+%let in_path = ~/sasuser.v94/inputdata/;
+run; 
+
+/* import delimited data with proc import: --------------------------------- */
+proc import datafile="&in_path.recs2020_public_v5.csv" out=recs_data;
+
+proc contents data=recs_data;
+run;
+
+/* data library for reading/writing data: ---------------------------------- */
+%let in_path = ~/sasuser.v94/inputdata/;
+%let out_path =~/sasuser.v94/outputdata/;
+libname in_lib "&in_path."; 
+libname out_lib "&out_path.";
+
+proc sql;
+	
+    create table state_weight as 
+    SELECT state_name,
+           sum(nweight) AS total_weight,
+           count(*) as num_record,
+           (sum(nweight)/1.2353E8) * 100 as percentage
+    FROM recs_data
+    GROUP BY state_name
+    ORDER BY percentage;
+
+    
+    SELECT SUM(total_weight) as sum_weight
+	FROM state_weight;
+	
+	SELECT max(percentage) 
+	from state_weight;
+	
+	Select *
+	from state_weight
+	Where state_name = "Michigan";
+  
+quit;
+run;
+
+```
+
+Based on the result, California has the highest percentage of records which is around 10%.
+The percentage of all records correspond to Michiga is around 3.17%.
+
+#### (b)
+```SAS
+proc sql;
+   create table positive_ele as 
+   select DOLLAREL
+   from recs_data
+   where DOLLAREL >= 0;
+quit;
+
+proc univariate data=positive_ele;
+    var DOLLAREL;
+    histogram DOLLAREL;
+run;
+```
+
+#### (c)
+```SAS
+proc sql;
+   create table log_ele as 
+   select LOG(DOLLAREL) as log_ele
+   from recs_data
+quit;
+
+proc univariate data=log_ele;
+    var log_ele;
+    histogram log_ele;
+run;
+```
+
+#### (d)
+```SAS
+proc sql;
+	create table linear_reg as
+	Select LOG(DOLLAREL) as log_ele, TOTROOMS, PRKGPLC1
+	From recs_data
+	
+quit;
+run;
+
+proc reg data = linear_reg;
+	model log_ele = TOTROOMS PRKGPLC1;
+	output out=op predicted=predicted_values;
+run;
+```
+
+#### (e)
+
+```SAS
+proc sql;
+	create table new_data as
+	SELECT *
+	FROM recs_data
+	JOIN op
+	ON recs_data.TOTROOMS = op.TOTROOMS;
+
+quit;
+run;
+
+
+proc sgplot 
+	data=new_data;
+	scatter x = DOLLAREL  y = predicted_values;
+run;
+```
+
+#### Problem 4 
+#### (a)
+The codebook was generated by Ipsos using their online probability based
+KnowledgePanel in the form of survey questionnaire.
+
+
+####(b)
+
+```SAS
+
+%let in_path = ~/sasuser.v94/inputdata/;
+run; 
+
+proc import datafile="&in_path.public2022.csv" out=public_2022;
+
+/* data library for reading/writing data: ---------------------------------- */
+%let in_path = ~/sasuser.v94/inputdata/;
+%let out_path =~/sasuser.v94/outputdata/;
+libname in_lib "&in_path."; 
+libname out_lib "&out_path.";
+
+proc sql;
+    create table selected_data as 
+	Select CaseID, weight,B3, ND2, B7_b, GH1, race_5cat, educ_4cat
+	From public_2022;
+	
+quit;
+run;
+	
+```
+
+####(c)
+
+```SAS
+
+PROC EXPORT DATA=work.selected_data
+            OUTFILE='~/sasuser.v94/outputdata/selected_data.csv'
+            DBMS=CSV REPLACE;
+RUN;
+
+```
+
+
+####(d)
+
+```stata
+import delimited "K:\selected_data.csv", varname(1)
+codebook 
+```
+
+to produce
+```stata
+ codebook 
+
+--------------------------------------------------------------------------------
+caseid                                                                    CaseID
+--------------------------------------------------------------------------------
+
+                  Type: Numeric (int)
+
+                 Range: [1,11775]                     Units: 1
+         Unique values: 11,667                    Missing .: 0/11,667
+
+                  Mean: 5889.99
+             Std. dev.: 3397.96
+
+           Percentiles:     10%       25%       50%       75%       90%
+                           1178      2949      5890      8829     10601
+
+--------------------------------------------------------------------------------
+weight                                                               (unlabeled)
+--------------------------------------------------------------------------------
+
+                  Type: Numeric (float)
+
+                 Range: [.1677,4.058]                 Units: .0001
+         Unique values: 2,644                     Missing .: 0/11,667
+
+                  Mean:       1
+             Std. dev.: .500907
+
+           Percentiles:     10%       25%       50%       75%       90%
+                          .5403     .6902     .9051     1.184    1.5528
+
+--------------------------------------------------------------------------------
+weight_pop                                                           (unlabeled)
+--------------------------------------------------------------------------------
+
+                  Type: Numeric (float)
+
+                 Range: [3666.6387,88732.648]         Units: .0001
+         Unique values: 2,850                     Missing .: 0/11,667
+
+                  Mean: 21866.3
+             Std. dev.:   10953
+
+           Percentiles:     10%       25%       50%       75%       90%
+                        11814.2   15092.1   19790.4     25890   33955.1
+
+--------------------------------------------------------------------------------
+nd2_n                                                                        ND2
+--------------------------------------------------------------------------------
+
+                  Type: Numeric (long)
+                 Label: nd2_n
+
+                 Range: [1,5]                         Units: 1
+         Unique values: 5                         Missing .: 0/11,667
+
+            Tabulation: Freq.   Numeric  Label
+                        7,201         1  About the same
+                        1,065         2  Much higher
+                          286         3  Much lower
+                        2,915         4  Somewhat higher
+                          200         5  Somewhat lower
+
+--------------------------------------------------------------------------------
+b7_b_n                                                                      B7_b
+--------------------------------------------------------------------------------
+
+                  Type: Numeric (long)
+                 Label: b7_b_n
+
+                 Range: [1,4]                         Units: 1
+         Unique values: 4                         Missing .: 0/11,667
+
+            Tabulation: Freq.   Numeric  Label
+                          104         1  Excellent
+                        1,952         2  Good
+                        5,411         3  Only fair
+                        4,200         4  Poor
+
+--------------------------------------------------------------------------------
+gh1_n                                                                        GH1
+--------------------------------------------------------------------------------
+
+                  Type: Numeric (long)
+                 Label: gh1_n
+
+                 Range: [1,4]                         Units: 1
+         Unique values: 4                         Missing .: 0/11,667
+
+            Tabulation: Freq.   Numeric  Label
+                          821         1  Neither own nor pay rent
+                        2,933         2  Own your home free and clear
+                                         (without a mortgage or loan)
+                        4,982         3  Own your home with a mortgage
+                                         or loan
+                        2,931         4  Pay rent
+
+--------------------------------------------------------------------------------
+race_5cat_n                                                          (unlabeled)
+--------------------------------------------------------------------------------
+
+                  Type: Numeric (long)
+                 Label: race_5cat_n
+
+                 Range: [1,5]                         Units: 1
+         Unique values: 5                         Missing .: 0/11,667
+
+            Tabulation: Freq.   Numeric  Label
+                          464         1  Asian
+                        1,225         2  Black
+                        1,464         3  Hispanic
+                          454         4  Other
+                        8,060         5  White
+
+--------------------------------------------------------------------------------
+educ_4cat_n                                                          (unlabeled)
+--------------------------------------------------------------------------------
+
+                  Type: Numeric (long)
+                 Label: educ_4cat_n
+
+                 Range: [1,4]                         Units: 1
+         Unique values: 4                         Missing .: 0/11,667
+
+            Tabulation: Freq.   Numeric  Label
+                        5,022         1  Bachelor's degree or more
+                        2,290         2  High school degree or GED
+                          531         3  Less than a high school degree
+                        3,824         4  Some college/technical or
+                                         associates degree
+
+--------------------------------------------------------------------------------
+b3_n                                                                          B3
+--------------------------------------------------------------------------------
+
+                  Type: Numeric (long)
+                 Label: b3_n, but 1 nonmissing value is not labeled
+
+                 Range: [0,1]                         Units: 1
+         Unique values: 2                         Missing .: 0/11,667
+
+ Tabulation: Freq.   Numeric  Label
+                        7,371         0  
+                        4,296         1  About the same
+
+. 
+end of do-file
+
+
+```
+
+There's 11,667 observations in the codebook so we matched.
+
+####(e)
+
+
+```stata
+encode nd2, generate(nd2_n)
+drop nd2
+
+encode b7_b, generate(b7_b_n)
+drop b7_b
+
+encode gh1, generate(gh1_n)
+drop gh1
+
+encode race_5cat, generate(race_5cat_n)
+drop race_5cat
+
+encode educ_4cat, generate(educ_4cat_n)
+drop educ_4cat
+
+replace b3 = "worseoff" if b3 == "Much worse off"
+replace b3 = "worseoff" if b3 == "Somewhat worse off"
+replace b3 = "same/better" if b3 == "About the same"
+replace b3 = "same/better" if b3 == "Somewhat better off"
+replace b3 = "same/better" if b3 == "Much better off"
+
+encode b3, generate(b3_n)
+drop b3
+
+```
+
+####(f)
+
+```stata
+
+svyset caseid [pw = weight_pop]
+replace b3_n = b3_n - 5
+logit b3_n i.nd2_n i.b7_b_n i.gh1_n i.race_5cat_n i.educ_4cat_n
+
+```
+
+to produce
+
+```stata
+. logit b3_n i.nd2_n i.b7_b_n i.gh1_n i.race_5cat_n i.educ_4cat_n
+
+Iteration 0:  Log likelihood = -7676.8916  
+Iteration 1:  Log likelihood = -6974.8865  
+Iteration 2:  Log likelihood = -6961.9902  
+Iteration 3:  Log likelihood = -6961.9492  
+Iteration 4:  Log likelihood = -6961.9492  
+
+Logistic regression                                    Number of obs =  11,667
+                                                       LR chi2(17)   = 1429.88
+                                                       Prob > chi2   =  0.0000
+Log likelihood = -6961.9492                            Pseudo R2     =  0.0931
+
+-------------------------------------------------------------------------------
+         b3_n | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+        nd2_n |
+ Much higher  |   .0617298   .0733398     0.84   0.400    -.0820136    .2054732
+  Much lower  |  -.2381838   .1382335    -1.72   0.085    -.5091166    .0327489
+Somewhat h..  |   .0079997   .0493973     0.16   0.871    -.0888172    .1048166
+Somewhat l..  |  -.1338428   .1633711    -0.82   0.413    -.4540443    .1863587
+              |
+       b7_b_n |
+        Good  |    .434152   .3265023     1.33   0.184    -.2057807    1.074085
+   Only fair  |   1.189804   .3220424     3.69   0.000      .558613    1.820996
+        Poor  |   2.324758   .3221384     7.22   0.000     1.693379    2.956138
+              |
+        gh1_n |
+Own your ..)  |   .4427046   .0912432     4.85   0.000     .2638712    .6215379
+Own your h..  |   .3649496   .0878205     4.16   0.000     .1928246    .5370746
+    Pay rent  |   .2593407   .0904474     2.87   0.004      .082067    .4366143
+              |
+  race_5cat_n |
+       Black  |  -.2705668   .1335746    -2.03   0.043    -.5323683   -.0087653
+    Hispanic  |    .237008   .1270548     1.87   0.062    -.0120148    .4860307
+       Other  |   .5377157   .1509016     3.56   0.000     .2419539    .8334775
+       White  |   .4237183   .1145955     3.70   0.000     .1991152    .6483213
+              |
+  educ_4cat_n |
+High schoo..  |   .1260318   .0571198     2.21   0.027     .0140791    .2379845
+Less than ..  |   .2730907   .1020193     2.68   0.007     .0731366    .4730449
+Some colle..  |   .1335356   .0488447     2.73   0.006     .0378018    .2292695
+              |
+        _cons |  -2.805674   .3495342    -8.03   0.000    -3.490748   -2.120599
+-------------------------------------------------------------------------------
+
+. 
+end of do-file
+```
+#### Interpretation:
+The coefficients for the variable nd2_n(predictor) tells as that:
+For a one-unit increase in nd2_n(Rating much higher), we expect a 0.0617298 increase in the log-odds of the dependent variable b3_n(financial rating), while holding all other independent variables constant.
+For a one-unit increase in nd2_n (Rating Much lower), we expect a 0.23818 decrease in the log-odds of the dependent variable b3_n(financial rating), while holding all other independent variables constant.
+For a one-unit increase in nd2_n (Rating Somewhat higher), we expect a .0079997 increase in the log-odds of the dependent variable b3_n(financial rating), while holding all other independent variables constant.
+For a one-unit increase in nd2_n(Rating Somewhat lower), we expect a 0.1338428 decrease in the log-odds of the dependent variable b3_n(financial rating), while holding all other independent variables constant.
+Based on the p-value on the top, it shows that it is statistical significant. Thus, the respondent’s family is better off compared to 12 month’s ago can be predicted by thinking that the chance of experiencing a natural disaster or severe weather event will be higher in 5 years. And the respondent’s family is worse off compared to 12 month’s ago can be predicted by thinking that the chance of experiencing a natural disaster or severe weather event will be lower  in 5 years
+
+#### (g)
+```{r}
+library(haven)
+stata_data <- read_dta("~/Desktop/stata_data.dta")
+```
+
+
+#### (h)
+```{r}
+library(survey)
+suv_design <- svydesign(id = ~ caseid, weight = ~ weight_pop, data = stata_data)
+logit_fit <- svyglm(b3_n ~ nd2_n + b7_b_n + gh1_n + race_5cat_n+educ_4cat_n, data=stata_data, 
+                  design = suv_design,
+                  family = quasibinomial)
+summary(logit_fit)
+```
+
+```{r}
+psrsq(logit_fit, type="Nagelkerke")
+```
+
+The pseudo R^2 value for the logistic regression model is 0.103.
+
+
+
+
+
+
+
+
+
+
+
