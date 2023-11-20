@@ -1,0 +1,251 @@
+---
+title: "STATS 506 HW5"
+format: html
+editor: visual
+embed-resources: true
+code-fold: true
+---
+
+Github Link: 
+
+####Problem 1 Plotting
+```{r}
+library(ggplot2)
+library(tidyverse)
+nnmaps <- read.csv("~/desktop/chicago-nmmaps.csv")
+```
+
+
+####(a)
+
+```{r}
+nnmaps$temp <- (nnmaps$temp - 32)*(5/9)
+
+temp_data <- nnmaps %>%
+  select(temp, season, month_numeric, month) %>%
+  group_by(month_numeric, season) %>%
+  summarise(temp = mean(temp, na.rm = TRUE)) %>%
+  ungroup()
+  
+```
+
+```{r}
+ggplot(temp_data, aes(x = month_numeric, y = temp, color = season))+
+  geom_point()+
+  geom_line()+
+  labs(title = "Mean Monthly Temperature in Celsius",
+    x = "Month",
+    y = "Average Monthly Temperature (C)"
+  )+
+  scale_x_continuous(breaks = 1:12, labels = 1:12)
+```
+
+
+#### (b)
+```{r}
+lines_data <- nnmaps %>%
+  select(temp, o3, pm10, dewpoint, month_numeric) %>%
+  group_by(month_numeric) %>%
+  summarise(temp = mean(temp, na.rm = TRUE),
+            o3 = mean(o3, na.rm = TRUE),
+            pm10 = mean(pm10, na.rm = TRUE),
+            dewpoint = mean(dewpoint, na.rm = TRUE))%>%
+  ungroup()
+```
+
+```{r}
+ggplot(lines_data, aes(x=month_numeric)) + 
+  geom_line(aes(y = temp), color = "aquamarine", linetype = "solid", label = "temp") +      
+  geom_line(aes(y = o3), color="chocolate", linetype="solid") + 
+  geom_line(aes(y = pm10), color="cornflowerblue", linetype="solid") + 
+  geom_line(aes(y = dewpoint), color="darkslategrey", linetype="solid") +
+  geom_text(aes(x = 2, y = 6, label = "Temperature"), color = "aquamarine") +
+  geom_text(aes(x = 11, y = 15, label = "O3"), color = "chocolate") +
+  geom_text(aes(x = 10, y = 33.5, label = "PM10"), color = "cornflowerblue") +
+  geom_text(aes(x = 7, y = 50, label = "Dewpoint"), color = "darkslategrey", vjust = -0.5, hjust = 0) +
+  labs(title = "Mean Monthly Temperature(C), o3, pm10, and dewpoint",
+    x = "Month",
+    y = "Temperature(C), o3, pm10, dewpoint"
+  )+
+  scale_x_continuous(breaks = 1:12, labels = 1:12) 
+
+```
+
+
+Based on the plot, it seems like pm10 has the lease seasonal trend since it shows the least variation among 12 months.
+
+
+#### Problem 2
+```{r}
+setClass("poly",
+                 slots = c(poly_coeff = "numeric",
+                           poly_power = "numeric"),
+                 prototype = c(poly_coeff = numeric(), 
+                               poly_power = numeric())
+)
+
+```
+
+```{r}
+
+## Constructor
+make_poly <- function(poly_coeff, poly_power) {
+  new("poly", poly_coeff = poly_coeff, poly_power = poly_power)
+}
+
+```
+
+```{r}
+
+## Validator
+setValidity("poly", function(object){
+  
+  if (length(object@poly_power) != length(object@poly_coeff)) { 
+     stop(paste("Number of coefficients and power unmatched."))
+    
+    } else if ((is.numeric(object@poly_coeff) == FALSE) || (is.numeric(object@poly_power) == FALSE)) {
+        stop(paste("Coefficients and power need to be numeric."))
+      
+    } else if (any(object@poly_power<0)) {
+        stop(paste("Power needs to be positive."))
+      
+    } else if (!all.equal(object@poly_power, as.integer(object@poly_power))){
+        stop(paste("Power needs to be an integer."))
+    }
+     return(TRUE)
+    }
+)
+```
+
+
+```{r}
+## Addition and Subtraction
+setMethod("+", signature(e1 = "poly", e2 = "poly"), function(e1, e2) {
+  common_powers <- intersect(e1@poly_power, e2@poly_power)
+  new_power <- union(e1@poly_power, e2@poly_power)
+  
+  new_coeff <- numeric(length(new_power))
+  
+  for (i in seq(new_power)) {
+    poly_power <- new_power[i]
+    new_coeff[i] <- sum(e1@poly_coeff[e1@poly_power == poly_power], 
+                        e2@poly_coeff[e2@poly_power == poly_power])
+  }
+  
+  new("poly", poly_coeff = new_coeff, poly_power = new_power)
+})    
+
+setMethod("-", signature(e1 = "poly", e2 = "poly"), function(e1, e2) {
+  common_powers <- intersect(e1@poly_power, e2@poly_power)
+  new_power <- union(e1@poly_power, e2@poly_power)
+  
+  new_coeff <- numeric(length(new_power))
+  
+  for (i in seq(new_power)) {
+    poly_power <- new_power[i]
+    new_coeff[i] <- sum(e1@poly_coeff[e1@poly_power == poly_power], 
+                        -e2@poly_coeff[e2@poly_power == poly_power])
+  }
+  
+  new("poly", poly_coeff = new_coeff, poly_power = new_power)
+})       
+
+```
+
+
+```{r}
+
+
+##Show Method
+setMethod("show", "poly",
+  function(object) {
+    poly_terms <- character(length(object@poly_power))
+    
+    for (i in seq(object@poly_power)) {
+      if (object@poly_power[i] == 1) {
+        poly_terms[i] <- paste(object@poly_coeff[i], "x", sep = "")
+      } else if (object@poly_power[i] == 0) {
+        poly_terms[i] <- paste(object@poly_coeff[i], sep = "")
+      } 
+      else {
+        poly_terms[i] <- paste(object@poly_coeff[i], "x^", object@poly_power[i], sep = "")
+      }
+    }
+    
+    valid_terms <- poly_terms[object@poly_coeff != 0]
+    
+    
+    cat(paste(valid_terms, collapse = " + "), "\n")
+  }
+)
+```
+
+
+```{r}
+p1 <- make_poly(c(3,2), c(2,0))
+p2 <- make_poly(c(7,-2,-1,17), c(3,2,1,0))
+p1
+p2
+p1 + p2
+p1 - p2
+```
+
+
+
+
+#### Problem 3
+
+#### (a)
+```{r}
+library(data.table)
+load("~/Desktop/nycflights13/data/airlines.rda")
+load("~/Desktop/nycflights13/data/airports.rda")
+load("~/Desktop/nycflights13/data/flights.rda")
+load("~/Desktop/nycflights13/data/planes.rda")
+load("~/Desktop/nycflights13/data/weather.rda")
+```
+
+```{r}
+## Table 1 Departure Delay
+flights <- as.data.table(flights)
+airports <- as.data.table(airports)
+dep_delay_table <- flights[, .(mean_delay = mean(dep_delay, na.rm = TRUE),
+                          median_delay = median(dep_delay, na.rm = TRUE),
+                          numflights = .N), by = .(origin)][numflights >= 10]
+setnames(airports, "faa","origin")
+new_flights <- airports[dep_delay_table, , on = "origin"]
+print(new_flights[, .(name, mean_delay, median_delay)][order(-mean_delay)], topn = 150)
+```
+
+
+
+
+```{r}
+## Table 2
+arr_delay_table <- flights[, .(mean_delay = mean(arr_delay, na.rm = TRUE),
+                          median_delay = median(arr_delay, na.rm = TRUE),
+                          numflights = .N), by = .(dest)][numflights >=10]
+setnames(airports, "origin","dest")
+new_flights2 <- merge(x = arr_delay_table, y = airports, by ="dest", all.x = TRUE)
+print(new_flights2[, .(name, mean_delay, median_delay)][order(-mean_delay)], topn = 150)
+
+```
+
+
+
+#### (b)
+
+```{r}
+planes <- as.data.table(planes)
+table_p2 <- merge(x=planes, y=flights, by="tailnum", all = TRUE)
+table_p2[, mph := distance/(air_time/60)]
+fastest_average <- table_p2[, .(avgmph = mean(mph, na.rm = TRUE),
+                          numflights = .N), by = .(model)]
+fastest_aircraft <- fastest_average[order(-avgmph)][1]
+print(fastest_aircraft)
+```
+
+
+
+
+
