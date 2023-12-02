@@ -1,0 +1,119 @@
+---
+title: "STATS 506 HW6"
+format: html
+editor: visual
+embed-resources: true
+code-fold: true
+---
+
+Github Link: 
+#### Problem 1
+
+```{r}
+## Without any parallel process
+library(boot)
+load("~/Desktop/nycflights13_4/data/flights.rda")
+flights <- na.omit(flights)
+flights$air_time <- as.numeric(flights$air_time)
+flights$origin <- as.factor(flights$origin)
+flights$dest <- as.factor(flights$dest)
+```
+
+
+```{r}
+#' A function called boot_fn to use as statistic in the boot later to return the mean air_time
+#'
+#' @param data 
+#' @param indices 
+#'
+#' @return mean air_time
+
+boot_statistics <- function(data, indices) {
+  subset_data <- data[indices,]
+  mean_air_time <- tapply(subset_data$air_time, subset_data$origin, mean)
+  return(mean_air_time)
+}
+
+set.seed(123)
+
+resamples <- boot(flights, boot_statistics, strata = flights$dest, R = 1000)
+resamples
+
+## calculate my 95% CI using standard error
+se <- apply(resamples$t, 2, sd)
+CI_lwb <- resamples$t0 - 1.96 * se
+CI_upb <- resamples$t0 + 1.96 * se
+mean_estimates <- resamples$t0
+
+final_table <- data.frame(
+  Mean_estimates = mean_estimates,
+  Standard_error = se,
+  CI_lower = CI_lwb,
+  CI_upper = CI_upb
+)
+
+print(final_table)
+```
+
+
+
+
+```{r}
+## With parallel processing
+library(future)
+plan(multisession)
+options(future.rng.onMisuse = "ignore")
+
+
+## same function as above
+boot_statistics2 <- function(data, indices) {
+  subset_data <- data[indices,]
+  mean_air_time <- tapply(subset_data$air_time, subset_data$origin, mean)
+  return(mean_air_time)
+}
+
+## bootstrap using future package
+set.seed(123)
+
+resamples_p <- vector("list", 1000)
+
+for (i in 1:1000) {
+  p <- future({ 
+    boot_statistics2(flights, sample(nrow(flights), replace = TRUE)) 
+  })
+  resamples_p[[i]] <- p
+}
+
+
+resamples_p_df <- data.frame()
+for(i in 1:length(resamples_p)){
+  df <- as.data.frame(t(value(resamples_p[[i]])))
+  resamples_p_df <- rbind(resamples_p_df, df)
+}
+
+## calculate 95%CI using standard error
+se_p <- apply(resamples_p_df, 2, sd)
+mean_estimates_p <- colMeans(resamples_p_df)
+CI_lwb_p<- mean_estimates_p - 1.96 * se_p
+CI_upb_p <- mean_estimates_p + 1.96 * se_p
+
+final_table_p <- data.frame(
+  Mean_estimate = mean_estimates_p,
+  Std_error = se_p,
+  CI_lower = CI_lwb_p,
+  CI_upper = CI_upb_p
+)
+
+print(final_table_p)
+
+```
+
+
+Based on two tables, I think the mean estimate is around the same. The only differences is in the decimals and I don't think it matters too much. But for standard errors, it looks the the one using future package has a higher number comparing to the one using non parallel processing. This leads to and higher CI lower bond for the one without any parallel processing and a higher CI upper bond for the one using parallel processing.
+
+
+
+
+
+　
+
