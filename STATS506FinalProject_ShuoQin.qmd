@@ -1,0 +1,175 @@
+---
+title: "STATS506FINALPROJECT"
+author: "Shuo Qin"
+format: html
+editor: visual
+---
+
+#### Final Project
+```{r}
+library(dplyr)
+library(ggplot2)
+income_data <- read.csv("~/Desktop/Tax_states.csv")
+medicare_2020 <- read.csv("~/Desktop/medicare.csv")
+```
+
+
+```{r}
+##data cleaning for Medicare data
+medicare_2020 <- medicare_2020 %>%
+  rename(states = Rndrng_Prvdr_State_Abrvtn,
+         zip_codes = Rndrng_Prvdr_Zip5,
+         country = Rndrng_Prvdr_Cntry,
+         provider_type = Rndrng_Prvdr_Type,
+         num_of_services = Tot_Srvcs) %>%
+  filter(states == "CA", country == "US", provider_type == "Nurse Practitioner") %>%
+  filter(!is.na(num_of_services), !is.na(Avg_Mdcr_Pymt_Amt))
+```
+
+
+```{r}
+medicare_2020 <- medicare_2020 %>%
+  mutate(total_medicare_payment = num_of_services * Avg_Mdcr_Pymt_Amt)
+
+medicare_2020 <- medicare_2020 %>%
+  select(Rndrng_NPI,
+         Rndrng_Prvdr_Last_Org_Name,
+         Rndrng_Prvdr_Gndr,
+         Rndrng_Prvdr_City,
+         states,
+         country,
+         zip_codes,
+         num_of_services,
+         Avg_Mdcr_Pymt_Amt,
+         total_medicare_payment,
+         Avg_Mdcr_Stdzd_Amt)
+
+medicare_zip_amount <- medicare_2020 %>%
+  group_by(zip_codes) %>%
+  summarise(
+    Total_reimbursement = sum(total_medicare_payment),
+    Total_num_of_service = sum(num_of_services)
+  )
+```
+
+
+
+
+```{r}
+## data cleaning for income data
+income_data <- income_data %>%
+  rename(num_of_individuals = N2,
+         total_income_amount = A02650,
+         states = STATE,
+         zip_codes = zipcode) %>%
+  filter(states == "CA") %>%
+  filter(!is.na(total_income_amount), !is.na(num_of_individuals)) %>%
+  filter(zip_codes != "0")
+```
+
+
+```{r}
+## final data for income_data
+income_data <- income_data %>%
+  select(STATEFIPS,
+         states,
+         zip_codes,
+         total_income_amount,
+         num_of_individuals,
+         )
+income_zip <- income_data %>%
+  group_by(zip_codes) %>%
+  summarise(
+    Total_income = sum(total_income_amount),
+  )
+income_zip$zip_codes <- as.character(income_zip$zip_codes)
+
+```
+
+
+
+```{r}
+##Final version of medicare data
+final_data <- merge(medicare_zip_amount, income_zip, by = "zip_codes", all = TRUE)
+final_data <- na.omit(final_data)
+
+summary(final_data)
+```
+
+
+```{r}
+sum(final_data$Total_reimbursement)
+median(final_data$Total_reimbursement)
+```
+
+
+
+
+```{r}
+## Histogram for Total Income
+ggplot(final_data, aes(x=Total_income)) +
+  geom_histogram(fill='grey', col='black') +
+  labs(title="Histogram of Total Income Levels", 
+  x="Total Income", 
+  y="Count")
+```
+
+```{r}
+## Histogram for Total Reimbursement
+ggplot(final_data, aes(x=Total_reimbursement)) +
+  geom_histogram(fill='grey', col='black') +
+  labs(title="Histogram of Total Reimbursement", 
+  x="Total Reimbursement", 
+  y="Count")
+```
+
+
+
+```{r}
+ggplot(final_data, aes(x=Total_income, y=Total_reimbursement)) +
+  geom_point() + 
+  geom_smooth(method="lm")+
+  labs(x="Total Income", y="Total Reimbursement") +
+  ggtitle("Linear Regression Plot")
+
+```
+
+
+```{r}
+top_10_reimbursement <- final_data %>%
+              arrange(desc(Total_reimbursement)) %>%
+              slice(1:10) %>%
+              select(zip_codes, Total_reimbursement)
+print(top_10_reimbursement)
+
+
+top_10_income <- final_data %>%
+              arrange(desc(Total_income)) %>%
+              slice(1:10) %>%
+              select(zip_codes, Total_income)
+print(top_10_income)
+
+```
+
+
+
+```{r}
+## Linear Regression
+lmod <- lm(Total_reimbursement ~ Total_income, data = final_data)
+summary(lmod)
+```
+
+
+
+
+```{r}
+## Correlation test
+corr_test <- cor.test(final_data$Total_income, final_data$Total_reimbursement, method = "pearson", conf.level = 0.95)
+corr_test
+```
+
+
+
+
+
+
