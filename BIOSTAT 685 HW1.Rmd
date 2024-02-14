@@ -1,0 +1,324 @@
+---
+title: "BIOSTAT 685 HW1"
+author: "Shuo Qin 60109782"
+date: "2024-01-28"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+library(readxl)
+library(ggplot2)
+df <- read_xlsx(path = "/Users/shuoqin/Desktop/TbHepBLifeExp.xlsx")
+df <-  df[df$Year == 2019,]
+df_differece <- data.frame(c())
+```
+
+## Question 1
+### (a)
+```{r}
+lowincome_19_female <- df[df$Year == 2019 & df$Income == 'Low income'& df$Gender == "Female", ]
+lowincome_19_male <- df[df$Year == 2019 & df$Income == 'Low income'& df$Gender == "Male", ]
+
+par(mfrow = c(1,2))
+## Histograms
+ggplot(data = lowincome_19_female, aes(x = HepatitisB)) +
+  geom_histogram() +  
+  ggtitle("Histogram of Hepatitis B Female") 
+
+
+ggplot(data = lowincome_19_male, aes(x = HepatitisB)) +
+  geom_histogram()+  
+  ggtitle("Histogram of Hepatitis B Male") 
+```
+
+
+### (b)
+
+```{r}
+par(mfrow = c(2,1))
+## Boxplots
+
+ggplot(data = lowincome_19_female, aes(x = HepatitisB)) +
+  geom_boxplot() +  
+  ggtitle("Boxplot of Hepatitis B Female") 
+
+ggplot(data = lowincome_19_male, aes(x = HepatitisB)) +
+  geom_boxplot() +  
+  ggtitle("Histogram of Hepatitis B Male") 
+
+
+```
+
+
+### (c)
+```{r}
+## mean and median
+mean_female <- mean(lowincome_19_female$HepatitisB)
+median_female <- median(lowincome_19_female$HepatitisB)
+mean_male <- mean(lowincome_19_male$HepatitisB)
+median_male <- median(lowincome_19_male$HepatitisB)
+
+mean_female
+median_female
+mean_male
+median_male
+```
+
+
+
+### (d)
+```{r}
+## t-test
+t_test <- t.test(lowincome_19_female$HepatitisB, lowincome_19_male$HepatitisB, var.equal = TRUE)
+print(t_test)
+```
+
+
+Based on the result of t-test, we have a p-value of 0.0038 which is less than 0.05. So we reject the null hypothesis which means there's a significant difference in the distribution of the incidence of Hepatitis B between the two gender groups in 2019.
+
+
+
+### (e)
+
+```{r}
+wilcox.test(lowincome_19_female$HepatitisB, lowincome_19_male$HepatitisB, 
+            correct = FALSE, alternative = "two.sided")
+```
+
+
+Based on the result of Wilcoxon rank sum test, we have a p-value of 0.008651 which is less than 0.05. So we reject the null hypothesis which means there's a significant difference in the distribution of the incidence of Hepatitis B between the two gender groups in 2019.
+
+
+
+## Question 2
+### (a)
+```{r}
+lm_19_female <- df[df$Year == 2019 & df$Income == 'Lower middle income'& df$Gender == "Female", ]
+lm_19_male <- df[df$Year == 2019 & df$Income == 'Lower middle income'& df$Gender == "Male", ]
+
+par(mfrow = c(2,1))
+## Histograms
+ggplot(data = lm_19_female, aes(x = HepatitisB)) +
+  geom_histogram() +  
+  ggtitle("Histogram of Hepatitis B Female") 
+
+
+ggplot(data = lm_19_male, aes(x = HepatitisB)) +
+  geom_histogram()+  
+  ggtitle("Histogram of Hepatitis B Male") 
+```
+
+### (b)
+
+```{r}
+par(mfrow = c(2,1))
+## Boxplots
+
+ggplot(data = lm_19_female, aes(x = HepatitisB)) +
+  geom_boxplot() +  
+  ggtitle("Boxplot of Hepatitis B Female") 
+
+ggplot(data = lm_19_male, aes(x = HepatitisB)) +
+  geom_boxplot() +  
+  ggtitle("Histogram of Hepatitis B Male") 
+
+```
+
+
+### (c)
+```{r}
+## mean and median
+lm_mean_female <- mean(lm_19_female$HepatitisB)
+lm_median_female <- median(lm_19_female$HepatitisB)
+lm_mean_male <- mean(lm_19_male$HepatitisB)
+lm_median_male <- median(lm_19_male$HepatitisB)
+
+lm_mean_female
+lm_median_female
+lm_mean_male
+lm_median_male
+```
+
+
+
+### (d)
+```{r}
+## t-test
+t_test <- t.test(lm_19_female$HepatitisB, lm_19_male$HepatitisB, var.equal = TRUE)
+print(t_test)
+```
+
+
+Based on the result of t-test, we have a p-value of 0.01255 which is less than 0.05. So we reject the null hypothesis which means there's a significant difference in the distribution of the incidence of Hepatitis B between the two gender groups in 2019.
+
+
+
+
+### (e)
+
+```{r}
+wilcox.test(lm_19_female$HepatitisB, lm_19_male$HepatitisB, 
+            correct = FALSE, alternative = "two.sided")
+```
+
+
+Based on the result of Wilcoxon rank sum test, we have a p-value of 0.01827 which is less than 0.05. So we reject the null hypothesis which means there's a significant difference in the distribution of the incidence of Hepatitis B between the two gender groups in 2019.
+
+
+## Question 3
+### (a)
+```{r}
+um_19_female <- df[df$Year == 2019 & df$Income == 'Upper middle income'& df$Gender == "Female", ]
+um_19_male <- df[df$Year == 2019 & df$Income == 'Upper middle income'& df$Gender == "Male", ]
+
+par(mfrow = c(2,1))
+## Histograms
+ggplot(data = um_19_female, aes(x = HepatitisB)) +
+  geom_histogram() +  
+  ggtitle("Histogram of Hepatitis B Female") 
+
+
+ggplot(data = um_19_male, aes(x = HepatitisB)) +
+  geom_histogram()+  
+  ggtitle("Histogram of Hepatitis B Male") 
+```
+
+
+### (b)
+```{r}
+par(mfrow = c(2,1))
+## Boxplots
+
+ggplot(data = um_19_female, aes(x = HepatitisB)) +
+  geom_boxplot() +  
+  ggtitle("Boxplot of Hepatitis B Female") 
+
+ggplot(data = um_19_male, aes(x = HepatitisB)) +
+  geom_boxplot() +  
+  ggtitle("Histogram of Hepatitis B Male") 
+```
+
+
+### (c)
+```{r}
+## mean and median
+um_mean_female <- mean(um_19_female$HepatitisB)
+um_median_female <- median(um_19_female$HepatitisB)
+um_mean_male <- mean(um_19_male$HepatitisB)
+um_median_male <- median(um_19_male$HepatitisB)
+
+um_mean_female
+um_median_female
+um_mean_male
+um_median_male
+```
+
+
+
+### (d)
+```{r}
+## t-test
+t_test <- t.test(um_19_female$HepatitisB, um_19_male$HepatitisB, var.equal = TRUE)
+print(t_test)
+```
+
+
+Based on the result of t-test, we have a p-value of 0.03569 which is less than 0.05. So we reject the null hypothesis which means there's a significant difference in the distribution of the incidence of Hepatitis B between the two gender groups in 2019.
+
+
+
+### (e)
+
+```{r}
+wilcox.test(um_19_female$HepatitisB, um_19_male$HepatitisB, 
+            correct = FALSE, alternative = "two.sided")
+```
+
+
+Based on the result of Wilcoxon rank sum test, we have a p-value of 0.008338 which is less than 0.05. So we reject the null hypothesis which means there's a significant difference in the distribution of the incidence of Hepatitis B between the two gender groups in 2019.
+
+
+
+### Question 4
+### (a)
+```{r}
+h_19_female <- df[df$Year == 2019 & df$Income == 'High income'& df$Gender == "Female", ]
+h_19_male <- df[df$Year == 2019 & df$Income == 'High income'& df$Gender == "Male", ]
+
+par(mfrow = c(2,1))
+## Histograms
+ggplot(data = h_19_female, aes(x = HepatitisB)) +
+  geom_histogram() +  
+  ggtitle("Histogram of Hepatitis B Female") 
+
+
+ggplot(data = h_19_male, aes(x = HepatitisB)) +
+  geom_histogram()+  
+  ggtitle("Histogram of Hepatitis B Male") 
+```
+
+
+### (b)
+```{r}
+par(mfrow = c(2,1))
+## Boxplots
+
+ggplot(data = h_19_female, aes(x = HepatitisB)) +
+  geom_boxplot() +  
+  ggtitle("Boxplot of Hepatitis B Female") 
+
+ggplot(data = h_19_male, aes(x = HepatitisB)) +
+  geom_boxplot() +  
+  ggtitle("Histogram of Hepatitis B Male") 
+```
+
+
+### (c)
+```{r}
+## mean and median
+h_mean_female <- mean(h_19_female$HepatitisB)
+h_median_female <- median(h_19_female$HepatitisB)
+h_mean_male <- mean(h_19_male$HepatitisB)
+h_median_male <- median(h_19_male$HepatitisB)
+
+h_mean_female
+h_median_female
+h_mean_male
+h_median_male
+```
+
+
+
+### (d)
+```{r}
+## t-test
+t_test <- t.test(h_19_female$HepatitisB, h_19_male$HepatitisB, var.equal = TRUE)
+print(t_test)
+
+```
+
+
+Based on the result of t-test, we have a p-value of 0.01492 which is less than 0.05. So we reject the null hypothesis which means there's a significant difference in the distribution of the incidence of Hepatitis B between the two gender groups in 2019.
+
+
+
+
+### (e)
+
+```{r}
+wilcox.test(h_19_female$HepatitisB, h_19_male$HepatitisB, 
+            correct = FALSE, alternative = "two.sided")
+```
+
+
+Based on the result of Wilcoxon rank sum test, we have a p-value of 9.802e-05 which is less than 0.05. So we reject the null hypothesis which means there's a significant difference in the distribution of the incidence of Hepatitis B between the two gender groups in 2019.
+
+
+
+## Question 5
+(a)I would you expect the resulting p-values to be less than the corresponding p-values you got in Questions (1)-(4) for the non-transformed values. Because once we use the log transformation on the right skewed data, we will make it more symmetrical comparing to before and since t-test has the assumption of distribution the p-value will be affected. So it could be less or greater than the result than before. In this dataset and t-test, the resulting p-vlue will be less.
+
+
+(b)I would you expect the resulting p-values to be equal to the corresponding p-values you got in Questions (1)-(4) for the non-transformed values. Because the wilcoxon sum rank test does not have the assumption about a normal distribution so it will not affect the p-value after the log transformation. 

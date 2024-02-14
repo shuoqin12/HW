@@ -1,0 +1,140 @@
+---
+title: "BIOSTAT 685 HW1"
+author: "Shuo Qin 60109782"
+date: "2024-01-28"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+library(dplyr)
+library(readxl)
+library(ggplot2)
+df <- read_xlsx(path = "/Users/shuoqin/Desktop/TbHepBLifeExp.xlsx")
+df <- df[df$Year == 2019,]
+difference_df <- df %>% group_by(Country, Income) %>% summarize(Diff = diff(HepatitisB))
+```
+
+## Question 1
+```{r}
+ggplot(difference_df, aes(x = Income, y = Diff)) +
+  geom_boxplot() +
+  labs(title = "HepatitisB differences by Income group in 2019",
+       x = "Income Group",
+       y = "Gender Difference (Hepatitis B)")
+```
+
+
+```{r}
+means <- difference_df %>% 
+  group_by(Income) %>% 
+  summarize(Mean = mean(Diff, na.rm = TRUE))
+
+medians <- difference_df %>% 
+  group_by(Income) %>% 
+  summarize(Median = median(Diff, na.rm = TRUE))
+
+means
+medians
+```
+
+
+The means for each box plot according to the order of high income, low income, lower middle income, and upper middle income are 0.01975230, 0.07576886, 0.05093569, and 0.02362865. The medians are 0.01098628, 0.05820021, 0.03749931, and 0.01719717. Those are statistics summary of the data and I don't think they actually tell you anything about potential significant gender difference in the incidence of Hepatitis B. In order to know about whether there's any significant differences, we should perform statistical tests.
+
+
+
+## Question 2
+```{r}
+low_income_female <-  df[df$Year == 2019 & df$Income == 'Low income'& df$Gender == "Female", ]
+low_income_male <-  df[df$Year == 2019 & df$Income == 'Low income'& df$Gender == "Male", ]
+
+high_income_female <- df[df$Year == 2019 & df$Income == 'High income'& df$Gender == "Female", ]
+high_income_male <- df[df$Year == 2019 & df$Income == 'High income'& df$Gender == "Male", ]
+
+
+lower_middle_female <- df[df$Year == 2019 & df$Income == 'Lower middle income'& df$Gender == "Female",]
+lower_middle_male <- df[df$Year == 2019 & df$Income == 'Lower middle income'& df$Gender == "Male",]
+
+upper_middle_female <- df[df$Year == 2019 & df$Income == 'Upper middle income'& df$Gender == "Female",]
+upper_middle_male <- df[df$Year == 2019 & df$Income == 'Upper middle income'& df$Gender == "Male",]
+```
+
+
+```{r}
+test1_lower <- t.test(low_income_female$HepatitisB, 
+                      low_income_male$HepatitisB, paired = TRUE, alternative = "two.sided")
+test1_lower
+
+test2_high <- t.test(high_income_female$HepatitisB, 
+                     high_income_male$HepatitisB, paired = TRUE, alternative = "two.sided")
+test2_high
+
+test3_lm <- t.test(lower_middle_female$HepatitisB, 
+                     lower_middle_male$HepatitisB, paired = TRUE, alternative = "two.sided")
+test3_lm
+
+test4_um <- t.test(upper_middle_female$HepatitisB, 
+                     upper_middle_male$HepatitisB, paired = TRUE, alternative = "two.sided")
+test4_um
+```
+
+
+Based on all 4 paired t-tests, we see that all of the p-values are less than 0.05 which means we reject the null hypothesis for all 4. Thus, there is a significant gender difference in the distribution of Hepatitis B incidence for each income group.
+
+
+
+## Question 3
+```{r}
+low <-  difference_df[difference_df$Income == 'Low income', ]
+high <- difference_df[difference_df$Income == 'High income', ]
+lm <- difference_df[difference_df$Income == 'Lower middle income', ]
+um <- difference_df[difference_df$Income == 'Upper middle income', ]
+
+sign_test_low <- binom.test(sum(low$Diff > 0), length(low$Diff), alternative="two.sided") 
+sign_test_low
+
+sign_test_high <- binom.test(sum(high$Diff > 0), length(high$Diff), alternative="two.sided") 
+sign_test_high
+
+sign_test_lm <- binom.test(sum(lm$Diff > 0), length(lm$Diff), alternative="two.sided") 
+sign_test_lm
+
+sign_test_um <- binom.test(sum(um$Diff > 0), length(um$Diff), alternative="two.sided") 
+sign_test_um
+```
+
+
+
+Based on the result of sign tests, the p-values are all very close to 0 which means we reject the null hypothesis. Therefore, there is a significant gender difference in the distribution of Hepatitis B incidence for each income group using the sign test.
+
+
+
+## Question 4
+```{r}
+wilcoxon_low <- wilcox.test(low_income_female$HepatitisB, low_income_male$HepatitisB, paired=TRUE)
+wilcoxon_low
+
+wilcoxon_high <- wilcox.test(high_income_female$HepatitisB, high_income_male$HepatitisB, paired=TRUE)
+wilcoxon_high
+
+wilcoxon_lm <- wilcox.test(lower_middle_female$HepatitisB, lower_middle_male$HepatitisB, paired=TRUE)
+wilcoxon_lm
+
+wilcoxon_um <- wilcox.test(upper_middle_female$HepatitisB, upper_middle_male$HepatitisB, paired=TRUE)
+wilcoxon_um
+```
+
+
+Based on the result of Wilcoxon Signed Rank tests, the p-values are all very close to 0 which means we reject the null hypothesis. Therefore, there is a significant gender difference in the distribution of Hepatitis B incidence for each income group.
+
+
+
+## Question 5
+By comparing the two results, I find that the paired ones tend to produce results with greater statistical significance. I think this happens because paired t-tests removes the effects of confounding variables since it focus on the difference. Thus, it will give us a more accurate result which leads to a more statistical significant p-value.
+
+
+
+
+## Question 6
+By comparing the two results, I find that the paired ones tend to produce results with greater statistical significance and the reason it happens it's the same as above. Also, the paired tests increase the power if the paired differences are more consistent than the unpaired ones.
